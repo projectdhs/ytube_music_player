@@ -452,13 +452,13 @@ async def build_item_response(ytmusicplayer, payload):
 			for a in media_all:
 				if(a['category'] in ["Top result", "Podcast"]):
 					continue
-
 				if(a['resultType'] == 'song'):
 					artists = ""
 					if("artist" in a):
 						artists = a["artist"]
 					if("artists" in a):
 						artists = ', '.join(artist["name"] for artist in a["artists"] if "name" in artist)
+					
 					children.append(BrowseMedia(
 						title = helper.get(a['resultType'], "") + artists + " - " + a['title'],  # noqa: E251
 						media_class = MediaClass.TRACK,					   # noqa: E251
@@ -622,8 +622,8 @@ async def build_item_response(ytmusicplayer, payload):
 
 
 	# ########################################### END ###############
-	if sort_list:
-		children.sort(key=lambda x: x.title, reverse=False)
+	# if sort_list:
+	# 	children.sort(key=lambda x: x.title, reverse=False)
 	response = BrowseMedia(
 		media_class = CONTAINER_TYPES_SPECIFIC_MEDIA_CLASS.get(search_type, MediaClass.DIRECTORY),
 		media_content_id = search_id,

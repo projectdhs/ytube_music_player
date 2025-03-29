@@ -177,8 +177,8 @@ PLAYMODE_SHUFFLE_RANDOM = "Shuffle Random"
 PLAYMODE_DIRECT = "Direct"
 
 ALL_SHUFFLE_MODES = [PLAYMODE_SHUFFLE, PLAYMODE_RANDOM, PLAYMODE_SHUFFLE_RANDOM, PLAYMODE_DIRECT]
-DEFAULT_SHUFFLE_MODE = PLAYMODE_SHUFFLE_RANDOM
-DEFAULT_SHUFFLE = True
+DEFAULT_SHUFFLE_MODE = PLAYMODE_DIRECT
+DEFAULT_SHUFFLE = False
 
 SEARCH_ID = "search_id"
 SEARCH_TYPE = "search_type"
@@ -350,7 +350,7 @@ def ensure_config(user_input):
 			if _shuffle_mode >= 1:
 				out[CONF_SHUFFLE_MODE] = ALL_SHUFFLE_MODES[_shuffle_mode - 1]
 			else:
-				out[CONF_SHUFFLE_MODE] = PLAYMODE_DIRECT
+				out[CONF_SHUFFLE_MODE] = _shuffle_mode
 			_LOGGER.debug(f"shuffle_mode: {_shuffle_mode} is a deprecated value and has been replaced with '{out[CONF_SHUFFLE_MODE]}'.")
 
 		# If old input(s) exists,uncheck the new corresponding select(s).

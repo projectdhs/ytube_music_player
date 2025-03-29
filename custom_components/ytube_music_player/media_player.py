@@ -26,6 +26,8 @@ from pytubefix import extract # to generate cipher
 
 import ytmusicapi
 from pytubefix.exceptions import RegexMatchError
+import yt_dlp
+
 # use this to work with local version
 # and make sure that the local package is also only loading local files
 # from .ytmusicapi import YTMusic
@@ -161,6 +163,21 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self._ignore_next_remote_pause_state = False	# RobinR1, OwnTone compatibility: Some Mediaplayers temporarely switches to 'paused' during media changes (next/prev/seek)
 		self._search = {"query": "", "filter": None, "limit": 20}
 		self.reset_attributs()
+
+		# ydl_opts = {
+		# 	"quiet": True,
+		# 	'cookiefile': cookfile,
+		# 	# This enforces a player client and skips unnecessary scraping to increase speed
+		# 	"extractor_args": {
+		# 		"youtube": {
+		# 			"skip": ["translated_subs", "dash"],
+		# 			"player_client": ["web_music"],
+		# 			"player_skip": ["webpage"],
+		# 		}
+		# 	},
+		# }
+		## 2025-3-26
+
 
 		# register "call_method"
 		if(name_add == ""):
@@ -360,6 +377,50 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				return False
 		self.log_me('debug', "[E] async_check_api")
 		return True
+	
+	async def async_get_audio_url(self, video_url):
+		"""yt-dlp를 사용하여 오디오 URL을 가져오는 함수"""
+
+		try:
+			cookfile = os.path.join(self.hass.config.path(STORAGE_DIR),'ytube_cookie.txt')
+			potoken = "MnB5m1G6-6piznmj4-pv-4XJoq8gRPmc0D-rXpaZa4Hxm9141nltAEwmROZ-pZVCCaMQeq66Wdn6DyleuJ4dpKoWx9VPguTHs6nNwoqK_IoQJaGJLi0me48u9CxRWfw2IpBZrdShOaMC_cOaStMTkHm_"
+    
+			ydl_opts = {
+				"quiet": True,
+				'cookiefile': cookfile,
+				# This enforces a player client and skips unnecessary scraping to increase speed
+				"extractor_args": {
+					"youtube": {
+						"skip": ["translated_subs", "dash"],
+						"player_client": ["web_music"],
+						"player_skip": ["webpage"],
+					}
+				},
+			}
+			import platform
+			self.log_me('error', f"[yt-dlp] python version: {platform.python_version()}")
+			ydl_opts["extractor_args"] = {"youtube": ["player-client=web,default", f"po_token=web.player+{potoken}"]}	
+			self.log_me('error', f"[yt-dlp] version: {yt_dlp.version.__version__}")
+			with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+				self.log_me('error', f"[yt-dlp] video: {video_url}")
+				# info_dict = await self.hass.async_add_executor_job(lambda: ydl.extract_info("https://music.youtube.com/watch?v=LYUCYSszl7w", download=False)) # RUN 
+				# info_dict = await self.hass.async_add_executor_job(lambda: ydl.extract_info("https://music.youtube.com/watch?v=a0LmdjshiAQ", download=False)) # I AM - Music only
+				info_dict = await self.hass.async_add_executor_job(lambda: ydl.extract_info(f"https://music.youtube.com/watch?v={video_url}", download=False))
+				self.log_me('error', f"[yt-dlp] finish1: {video_url}")
+				
+			# for format in info_dict.get('formats', []):
+			# 	if format.get('ac	odec'):
+			# 		if  format['vcodec'] != 'none':
+			# 			return format['url']
+
+			for format in info_dict.get('formats', []):
+				if format.get('acodec') == 'mp4a.40.2' and format.get('vcodec') != 'none':  # 오디오 전용 스트림 선택
+					return format['url']
+		except Exception:
+			self.log_me('error', "[yt-dlp] Error occurred while extracting audio URL")
+			self.log_me('error', traceback.format_exc())
+
+		return None
 
 	@property
 	def device_info(self):
@@ -1416,7 +1477,8 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		if(videoId is None):
 			self.log_me('debug', "videoId was None")
 			return ""
-		_url = await self.async_get_url_self(videoId,retry)
+		_url = await self.async_get_audio_url(videoId)
+		# _url = await self.async_get_url_self(videoId,retry)
 
 		# check url
 		if(_url != ""):
