@@ -1,5 +1,5 @@
 {
-  "domain": "ytube_music_player_dh",
+  "domain": "ytube_music_player",
   "name": "YouTube Music Player DH",
   "codeowners": ["@projectdhs"],
   "config_flow": true,
@@ -13,5 +13,5 @@
     "pytubefix==v8.12.1",
     "integrationhelper==0.2.2"
   ],
-  "version": "0.0.1"
+  "version": "0.0.2"
 }
